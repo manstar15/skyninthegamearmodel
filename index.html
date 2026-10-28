@@ -6,12 +6,26 @@
 <title>AR Model</title>
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 <style>
-  body { margin: 0; background: #111; }
-  model-viewer { width: 100vw; height: 100vh; }
+  body { margin: 0; background: #111; font-family: sans-serif; }
+  model-viewer { width: 100vw; height: 100vh; height: 100dvh; }
+  #ar-btn { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+    background: #fff; color: #000; border: none; border-radius: 30px;
+    padding: 16px 32px; font-size: 20px; font-weight: bold; }
+  #msg { display: none; position: fixed; bottom: 60px; left: 0; right: 0;
+    text-align: center; color: #fff; font-size: 18px; padding: 0 20px; }
 </style>
 </head>
 <body>
-<model-viewer src="armodel.glb" ar ar-modes="scene-viewer webxr quick-look"
-  camera-controls auto-rotate></model-viewer>
+<model-viewer id="mv" src="armodel.glb" ar ar-modes="scene-viewer webxr quick-look"
+  camera-controls auto-rotate>
+  <button slot="ar-button" id="ar-btn">📱 צפה ב-AR</button>
+</model-viewer>
+<div id="msg">הטלפון הזה לא תומך ב-AR, או שחסר Google Play Services for AR</div>
+<script>
+  const mv = document.getElementById('mv');
+  mv.addEventListener('load', () => {
+    if (!mv.canActivateAR) document.getElementById('msg').style.display = 'block';
+  });
+</script>
 </body>
 </html>
