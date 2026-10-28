@@ -12,16 +12,16 @@
     background: #fff; color: #000; border: none; border-radius: 40px;
     padding: 24px 56px; font-size: 28px; font-weight: bold;
     box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-  #msg { display: none; position: fixed; bottom: 60px; left: 0; right: 0;
+  #msg { display: none; position: fixed; bottom: 15%; left: 0; right: 0;
     text-align: center; color: #fff; font-size: 18px; padding: 0 20px; }
 </style>
 </head>
 <body>
-<model-viewer id="mv" src="armodel.glb" ar ar-modes="scene-viewer webxr quick-look"
+<model-viewer id="mv" src="armodel.glb" ar ar-modes="webxr scene-viewer quick-look"
   camera-controls auto-rotate>
-  <button slot="ar-button" id="ar-btn">📱 צפה ב-AR</button>
+  <button slot="ar-button" id="ar-btn">📱 View in AR</button>
 </model-viewer>
-<div id="msg">הטלפון הזה לא תומך ב-AR, או שחסר Google Play Services for AR</div>
+<div id="msg">This phone doesn't support AR, or Google Play Services for AR is missing</div>
 <script>
   const mv = document.getElementById('mv');
   mv.addEventListener('load', () => {
