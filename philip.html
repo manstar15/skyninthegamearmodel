@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SKYN AR - Philip</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<style>
+  body { margin: 0; background: #111; font-family: sans-serif; }
+  model-viewer { width: 100vw; height: 100vh; height: 100dvh; }
+  #ar-btn { position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%);
+    width: 70vw; max-width: 340px; padding: 0; border: none; background: none;
+    border-radius: 18px; overflow: hidden; cursor: pointer;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6); }
+  #ar-btn img { display: block; width: 100%; height: auto; }
+  #ar-btn:active { transform: translateX(-50%) scale(0.96); }
+  #msg { display: none; position: fixed; bottom: 12%; left: 0; right: 0;
+    text-align: center; color: #fff; font-size: 18px; padding: 0 20px; }
+</style>
+</head>
+<body>
+<model-viewer id="mv" src="philip.glb" ar ar-modes="webxr scene-viewer quick-look"
+  ar-scale="fixed" camera-controls autoplay>
+  <button slot="ar-button" id="ar-btn" aria-label="View in your room">
+    <img src="arbutton.jpg" alt="SKYN - View In Your Room">
+  </button>
+</model-viewer>
+<div id="msg">This phone doesn't support AR, or Google Play Services for AR is missing</div>
+<script>
+  const mv = document.getElementById('mv');
+  mv.addEventListener('load', () => {
+    if (!mv.canActivateAR) document.getElementById('msg').style.display = 'block';
+  });
+</script>
+</body>
+</html>
