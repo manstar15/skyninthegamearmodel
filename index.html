@@ -1,35 +1,253 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SKYN AR</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#595959">
+<title>Green puffer coat in your room | SKYN</title>
+<meta name="description" content="Shown at true size on a 1.35 m child mannequin.">
+<meta property="og:title" content="Green puffer coat in your room | SKYN">
+<meta property="og:description" content="See it at true size in your own space.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&display=swap" rel="stylesheet">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-  body { margin: 0; background: #111; font-family: sans-serif; }
-  model-viewer { width: 100vw; height: 100vh; height: 100dvh; }
-  #ar-btn { position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%);
-    width: 70vw; max-width: 340px; padding: 0; border: none; background: none;
-    border-radius: 18px; overflow: hidden; cursor: pointer;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.6); }
-  #ar-btn img { display: block; width: 100%; height: auto; }
-  #ar-btn:active { transform: translateX(-50%) scale(0.96); }
-  #msg { display: none; position: fixed; bottom: 12%; left: 0; right: 0;
-    text-align: center; color: #fff; font-size: 18px; padding: 0 20px; }
+  :root {
+    --brand: #595959;   /* SKYN studio gray */
+    --sweep: #6C6C6A;   /* light on the backdrop */
+    --floor: #474746;   /* backdrop falloff */
+    --panel: #333333;   /* bottom sheet */
+    --lime:  #DDF315;   /* SKYN lime, the only accent */
+    --paper: #F4F4EF;   /* text */
+    --muted: #C2C2BB;   /* secondary text */
+    --font: 'Chakra Petch', 'Segoe UI', Roboto, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--brand); color: var(--paper); font-family: var(--font);
+    -webkit-font-smoothing: antialiased; overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app {
+    height: 100vh; height: 100dvh;
+    display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  header { padding: 18px 22px 4px; }
+  header img { height: 20px; width: auto; display: block; }
+
+  .app { background: radial-gradient(130% 70% at 50% 34%, var(--sweep) 0%, var(--brand) 52%, var(--floor) 100%); }
+  .stage { position: relative; min-height: 0; }
+  model-viewer {
+    width: 100%; height: 100%; background: transparent;
+    --progress-bar-color: transparent; --poster-color: transparent;
+  }
+  .hint {
+    position: absolute; left: 0; right: 0; bottom: 30px; margin: 0;
+    text-align: center; font-size: 13px; color: var(--muted);
+    pointer-events: none; transition: opacity .5s ease;
+  }
+  .hint.gone { opacity: 0; }
+
+  .panel {
+    position: relative; z-index: 2;
+    background: var(--panel);
+    padding: 22px 22px calc(22px + env(safe-area-inset-bottom, 0px));
+    border-radius: 22px 22px 0 0;
+    margin-top: -18px;
+  }
+  .panel h1 { font-size: 26px; font-weight: 600; line-height: 1.15; margin: 0 0 8px; }
+  .panel .desc { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; max-width: 46ch; }
+
+  .ar-btn {
+    margin-top: 20px; width: 100%; height: 62px;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    border: 0; border-radius: 14px; background: var(--lime); color: #232323;
+    font: 600 19px/1 var(--font); cursor: pointer;
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .ar-btn:active { transform: scale(.97); filter: brightness(.94); }
+  .ar-btn:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; }
+  .ar-btn svg { width: 26px; height: 26px; flex: none; }
+  .ar-btn[hidden] { display: none; }
+
+  .note {
+    margin-top: 18px; padding: 14px 16px; border-radius: 12px;
+    background: rgba(255,255,255,.07); font-size: 14px; line-height: 1.5;
+  }
+  .note[hidden] { display: none; }
+
+  .qr { margin-top: 22px; display: flex; gap: 18px; align-items: center; }
+  .qr[hidden] { display: none; }
+  .qr .code { flex: none; background: var(--paper); padding: 10px; border-radius: 12px; line-height: 0; }
+  .qr .code img, .qr .code canvas { width: 120px; height: 120px; }
+  .qr p { margin: 0; font-size: 15px; line-height: 1.45; color: var(--paper); }
+
+  /* Loading: the logo fills with lime as the model downloads */
+  .loader {
+    position: fixed; inset: 0; z-index: 20;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--brand); transition: opacity .5s ease, visibility .5s ease;
+  }
+  .loader.done { opacity: 0; visibility: hidden; }
+  .mark { position: relative; width: min(58vw, 280px); aspect-ratio: 622 / 140; }
+  .mark img { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .mark .dim { opacity: .16; filter: grayscale(1) brightness(2.2); }
+  .mark .fill { clip-path: inset(0 calc(100% - var(--p, 0%)) 0 0); transition: clip-path .3s ease-out; }
+  .loader .status { margin-top: 22px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .loader .retry {
+    margin-top: 18px; padding: 12px 22px; border: 1px solid var(--muted); border-radius: 12px;
+    background: transparent; color: var(--paper); font: 500 15px/1 var(--font); cursor: pointer;
+  }
+  .loader .retry[hidden] { display: none; }
+
+  .toast {
+    position: fixed; left: 16px; right: 16px; z-index: 30;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    max-width: 440px; margin: 0 auto; padding: 14px 16px; border-radius: 12px;
+    background: var(--paper); color: #262626; font-size: 14px; line-height: 1.45;
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+    transform: translateY(calc(100% + 40px)); visibility: hidden;
+    transition: transform .35s ease, visibility .35s;
+  }
+  .toast.show { transform: none; visibility: visible; }
+
+  @media (min-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr) 420px; grid-template-rows: auto minmax(0, 1fr); }
+    header { grid-column: 1 / -1; padding: 28px 36px 8px; }
+    header img { height: 24px; }
+    .app { background: var(--brand); }
+    .stage { grid-row: 2; grid-column: 1; border-radius: 22px; margin: 0 24px 28px 28px;
+      background: radial-gradient(130% 75% at 50% 32%, var(--sweep) 0%, var(--brand) 52%, var(--floor) 100%); }
+    .panel { grid-row: 2; grid-column: 2; align-self: center; margin: 0 36px 28px 0; border-radius: 20px; padding: 30px; }
+    .panel h1 { font-size: 34px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+  }
 </style>
 </head>
 <body>
-<model-viewer id="mv" src="kidcoat.glb" ar ar-modes="webxr scene-viewer quick-look"
-  ar-scale="fixed" camera-controls auto-rotate>
-  <button slot="ar-button" id="ar-btn" aria-label="View in your room">
-    <img src="arbutton.jpg" alt="SKYN - View In Your Room">
-  </button>
-</model-viewer>
-<div id="msg">This phone doesn't support AR, or Google Play Services for AR is missing</div>
+
+<div class="loader" id="loader" role="status" aria-live="polite">
+  <div class="mark" id="mark" aria-hidden="true">
+    <img class="dim" src="logo.png" alt="">
+    <img class="fill" src="logo.png" alt="">
+  </div>
+  <div class="status" id="status">Loading 0%</div>
+  <button class="retry" id="retry" hidden onclick="location.reload()">Reload page</button>
+</div>
+
+<div class="app">
+  <header><img src="logo.png" alt="SKYN"></header>
+
+  <main class="stage">
+    <model-viewer id="mv" src="kidcoat.glb"  alt="Green puffer coat, 3D model"
+      ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor"
+      camera-controls auto-rotate auto-rotate-delay="1500" rotation-per-second="18deg" shadow-intensity="1" shadow-softness="0.9"
+      environment-image="neutral" exposure="1.05" interaction-prompt="none"
+      touch-action="pan-y" loading="eager">
+    </model-viewer>
+    <p class="hint" id="hint">Drag to turn it, pinch to zoom</p>
+  </main>
+
+  <section class="panel">
+    <h1>Green puffer coat</h1>
+    <p class="desc">Shown at true size on a 1.35 m child mannequin.</p>
+
+    <button class="ar-btn" id="arBtn" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2.8 20 7.4v9.2l-8 4.6-8-4.6V7.4z"/><path d="M4 7.4l8 4.6 8-4.6M12 12v9.2"/>
+      </svg>
+      View in your room
+    </button>
+
+    <div class="note" id="note" hidden></div>
+
+    <div class="qr" id="qr" hidden>
+      <div class="code" id="qrCode"></div>
+      <p>Scan with your phone camera to place it in your room at true size.</p>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="alert"></div>
+
 <script>
   const mv = document.getElementById('mv');
-  mv.addEventListener('load', () => {
-    if (!mv.canActivateAR) document.getElementById('msg').style.display = 'block';
+  const loader = document.getElementById('loader');
+  const mark = document.getElementById('mark');
+  const statusEl = document.getElementById('status');
+  const arBtn = document.getElementById('arBtn');
+  const note = document.getElementById('note');
+  const hint = document.getElementById('hint');
+
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) mv.removeAttribute('auto-rotate');
+
+  let finished = false;
+  function finish() {
+    if (finished) return;
+    finished = true;
+    mark.style.setProperty('--p', '100%');
+    statusEl.textContent = 'Ready';
+    setTimeout(() => loader.classList.add('done'), 350);
+  }
+
+  mv.addEventListener('progress', (e) => {
+    const p = Math.round(e.detail.totalProgress * 100);
+    mark.style.setProperty('--p', p + '%');
+    if (!finished) statusEl.textContent = 'Loading ' + p + '%';
+  });
+
+  mv.addEventListener('load', () => { finish(); setUpRoomView(); });
+
+  mv.addEventListener('error', () => {
+    statusEl.textContent = 'The model didn\u2019t load. Check your connection, then reload.';
+    document.getElementById('retry').hidden = false;
+  });
+
+  function setUpRoomView() {
+    if (mv.canActivateAR) { arBtn.hidden = false; return; }
+    if (isIOS) {
+      showNote('To see it in your room, open this page in Safari. Tap the share or menu button and choose Open in Safari.');
+    } else if (isAndroid) {
+      showNote('To see it in your room, open this page in Chrome. If it still doesn\u2019t work, install Google Play Services for AR from the Play Store, then reload.');
+    } else {
+      const box = document.getElementById('qr');
+      box.hidden = false;
+      const url = location.href.split('#')[0];
+      if (window.QRCode) new QRCode(document.getElementById('qrCode'), { text: url, width: 240, height: 240, colorDark: '#262626', colorLight: '#F4F4EF' });
+    }
+  }
+  function showNote(text) { note.textContent = text; note.hidden = false; }
+
+  arBtn.addEventListener('click', () => mv.activateAR());
+
+  mv.addEventListener('ar-status', (e) => {
+    if (e.detail.status === 'failed') {
+      toast(isAndroid
+        ? 'The room view didn\u2019t open. Update Google Play Services for AR in the Play Store, close other apps using the camera, and try again.'
+        : 'The room view didn\u2019t open. Close other apps using the camera and try again.');
+    }
+  });
+
+  let toastTimer;
+  function toast(text) {
+    const t = document.getElementById('toast');
+    t.textContent = text; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 6000);
+  }
+
+  mv.addEventListener('camera-change', (e) => {
+    if (e.detail.source === 'user-interaction') hint.classList.add('gone');
   });
 </script>
 </body>
