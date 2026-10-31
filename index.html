@@ -151,6 +151,7 @@
       camera-controls auto-rotate auto-rotate-delay="1500" rotation-per-second="18deg" shadow-intensity="1" shadow-softness="0.9"
       environment-image="neutral" exposure="1.05" interaction-prompt="none"
       touch-action="pan-y" loading="eager">
+      <div slot="ar-button" hidden></div>
     </model-viewer>
     <p class="hint" id="hint">Drag to turn it, pinch to zoom</p>
   </main>
@@ -193,6 +194,7 @@
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) mv.removeAttribute('auto-rotate');
 
   let finished = false;
+  let failed = false;
   function finish() {
     if (finished) return;
     finished = true;
@@ -204,12 +206,14 @@
   mv.addEventListener('progress', (e) => {
     const p = Math.round(e.detail.totalProgress * 100);
     mark.style.setProperty('--p', p + '%');
-    if (!finished) statusEl.textContent = 'Loading ' + p + '%';
+    if (!finished && !failed) statusEl.textContent = 'Loading ' + p + '%';
   });
 
   mv.addEventListener('load', () => { finish(); setUpRoomView(); });
 
   mv.addEventListener('error', () => {
+    failed = true;
+    mark.style.setProperty('--p', '0%');
     statusEl.textContent = 'The model didn\u2019t load. Check your connection, then reload.';
     document.getElementById('retry').hidden = false;
   });
